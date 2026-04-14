@@ -6,9 +6,9 @@ import time
 
 from fastapi import APIRouter, HTTPException, status
 
-from app.core.schemas import OCRPreviewRequest, OCRPreviewResponse
+from app.core.schemas import ErrorEnvelope, OCRPreviewRequest, OCRPreviewResponse
 from app.infrastructure.temp_manager import TempImageManager
-from app.services.ocr_service import ocr_service
+from app.services.ocr_service import OCRServiceError, ocr_service
 from app.services.preview_store import preview_store
 
 router = APIRouter(prefix="/ocr")
@@ -34,16 +34,29 @@ async def preview(payload: OCRPreviewRequest) -> OCRPreviewResponse:
     started = time.perf_counter()
     image_bytes = _decode_image(payload.image_base64)
 
-    with temp_manager.temp_image(image_bytes) as temp_path:
-        extracted = await ocr_service.extract(str(temp_path))
+    try:
+        with temp_manager.temp_image(image_bytes) as temp_path:
+            result = await ocr_service.extract(str(temp_path))
+    except OCRServiceError as exc:
+        elapsed_ms = int((time.perf_counter() - started) * 1000)
+        return OCRPreviewResponse(
+            status="error",
+            processing_time_ms=elapsed_ms,
+            error=ErrorEnvelope(
+                error_code=exc.error_code,
+                message=exc.message,
+                recovery_suggestion=exc.recovery_suggestion,
+            ),
+        )
 
-    preview_id = preview_store.create(extracted)
+    preview_id = preview_store.create(result.extracted_data)
     elapsed_ms = int((time.perf_counter() - started) * 1000)
+    response_status = "partial" if result.warnings else "success"
 
     return OCRPreviewResponse(
-        status="partial",
+        status=response_status,
         preview_id=preview_id,
-        extracted_data=extracted,
-        warnings=["OCR extraction is currently in scaffold mode. Review all fields before commit."],
+        extracted_data=result.extracted_data,
+        warnings=result.warnings,
         processing_time_ms=elapsed_ms,
     )
