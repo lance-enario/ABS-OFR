@@ -1,4 +1,4 @@
-# Tailoring OCR Backend (Phase 1)
+# Tailoring OCR Backend (Phase 2 In Progress)
 
 This backend is the Phase 1 foundation for the Annies Boutique Scan - Order Form Record System.
 
@@ -8,6 +8,9 @@ This backend is the Phase 1 foundation for the Annies Boutique Scan - Order Form
 - FastAPI app skeleton with versioned routing.
 - Baseline health endpoint for backend, database, and LM Studio checks.
 - Core config, constants, and standard API error envelope.
+- SQLAlchemy data models for orders and measurements.
+- OCR preview route scaffold with temp image cleanup.
+- Order commit and list routes with graceful DB failure responses.
 
 ## Quick start
 
@@ -29,9 +32,13 @@ uvicorn app.main:app --reload
 
 - `GET /`
 - `GET /api/v1/health`
+- `GET /api/v1/contracts/metadata`
+- `POST /api/v1/ocr/preview`
+- `POST /api/v1/orders`
+- `GET /api/v1/orders/list`
 
-## Next in Phase 1
+## Next in Phase 2
 
-- Add SQLAlchemy models and migrations.
-- Add OCR preview route skeleton with request validation only.
-- Lock canonical measurement schema with examples.
+- Implement OpenCV preprocessing pipeline (fiducial + homography + resize).
+- Replace OCR scaffold with LM Studio extraction + JSON validation.
+- Add migration tooling (Alembic) and export endpoint.
