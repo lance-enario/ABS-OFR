@@ -2,7 +2,7 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class Settings(BaseSettings):
-    app_name: str = "Tailoring OCR Backend"
+    app_name: str = "ABS-OFR"
     app_env: str = "development"
     app_debug: bool = True
     api_v1_prefix: str = "/api/v1"
